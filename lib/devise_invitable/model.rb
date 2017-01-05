@@ -125,16 +125,22 @@ module Devise
         invitation_accepted? || !invited_to_sign_up?
       end
 
+      # Override devise confirmable confirmation_required so we don't need to
+      # redefine singleton methods at runtime
+      def confirmation_required?
+        !@skip_confirmation && !confirmed?
+      end
+
+      def skip_confirmation!
+        @skip_confirmation = true
+      end
+
       # Reset invitation token and send invitation again
       def invite!(invited_by = nil, options = {})
         # This is an order-dependant assignment, this can't be moved
         was_invited = invited_to_sign_up?
 
-        # Required to workaround confirmable model's confirmation_required? method
-        # being implemented to check for non-nil value of confirmed_at
-        if new_record_and_responds_to?(:confirmation_required?)
-          def self.confirmation_required?; false; end
-        end
+        skip_confirmation!
 
         yield self if block_given?
         generate_invitation_token if no_token_present_or_skip_invitation?
