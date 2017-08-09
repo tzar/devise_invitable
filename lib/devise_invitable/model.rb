@@ -295,6 +295,7 @@ module Devise
           invitable.invited_by = invited_by
           unless invitable.password || invitable.encrypted_password.present?
             invitable.password = random_password
+            invitable.instance_variable_set("@password_is_random", true)
           end
 
           invitable.valid? if self.validate_on_invite
